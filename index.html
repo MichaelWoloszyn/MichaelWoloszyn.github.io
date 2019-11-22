@@ -3,11 +3,16 @@
 		<script>
 			var nodes = [];
 			var state = 0;
+			var nodeID = 0;
 
 			var IDLE = 0;
 			var ADDNODE = 1;
 			var ADDBRANCH1 = 2;
 			var ADDBRANCH2 = 3;
+			var REMOVENODE = 4;
+
+			var	node1;
+			var node2;
 			
 			function addNode() {
 				state = ADDNODE;
@@ -15,14 +20,79 @@
 				message.innerHTML = "Please click somewhere to add a node.";
 			}
 
-			function canvasClick() {
+			function addBranch() {
+				state = ADDBRANCH1;
+				message = document.getElementById("action-message");
+				message.innerHTML = "Please select the first node.";
+			}
+
+			function removeNode() {
+				state = REMOVENODE;
+				message = document.getElementById("action-message");
+				message.innerHTML = "Please select the node you wish to delete.";
+			}
+
+			function canvasClick(event) {
 				var canvas = document.getElementById("canvas");
 				var ctx = canvas.getContext("2d");
+				
+				var rect = canvas.getBoundingClientRect();
+				var x = event.clientX - rect.left;
+				var y = event.clientY - rect.top;
 				
 				if (state == ADDNODE) {
 					message = document.getElementById("action-message");
 					message.innerHTML = "";
+
+					nodes.push({id: nodeID,x: x,y: y,branches: []})
+					nodeID = nodeID + 1;
+
+					state = IDLE;
 				}
+				else if (state == ADDBRANCH1) {
+					for (i = 0; i < nodes.length; i++) {
+						if (Math.pow((x-nodes[i].x),2) + Math.pow((y-nodes[i].y),2) <= Math.pow(50,2)) {
+							node1 = nodes[i].id;
+							message = document.getElementById("action-message");
+							message.innerHTML = "Please select the second node.";
+							state = ADDBRANCH2;
+						}
+					}
+				}
+				else if (state == ADDBRANCH2) {
+					for (i = 0; i < nodes.length; i++) {
+						if (Math.pow((x-nodes[i].x),2) + Math.pow((y-nodes[i].y),2) <= Math.pow(50,2)) {
+							node2 = nodes[i].id;
+							message = document.getElementById("action-message");
+							message.innerHTML = "";
+							for (j = 0; j < nodes.length; j++) {
+								if (nodes[j].id == node1) {
+									nodes[j].branches.push(node2);
+								}
+							}
+							state = IDLE;
+						}
+					}
+				}
+				else if (state == REMOVENODE) {
+					for (i = 0; i < nodes.length; i++) {
+						if (Math.pow((x-nodes[i].x),2) + Math.pow((y-nodes[i].y),2) <= Math.pow(50,2)) {
+							message = document.getElementById("action-message");
+							message.innerHTML = "";
+							for (j = 0; j < nodes.length; j++) {
+								for (k = 0; k < nodes[j].branches.length; k++) {
+									if (nodes[j].branches[k] == nodes[i].id) {
+										delete nodes[j].branches[k]
+									}
+								}
+							}
+							nodes.splice(i,1);
+							state = IDLE;
+						}
+					}
+				}
+				
+				draw();
 			}
 			
 			function initialize() {
@@ -31,11 +101,41 @@
 
 				canvas.width = window.innerWidth - 400;
 				canvas.height = window.innerHeight - 100;
+
+				canvas.addEventListener("click",function(event) {canvasClick(event)},false);
+			}
+
+
+			function drawNode(ctx,x,y) {
+				ctx.beginPath();
+				ctx.arc(x,y,50,0,2*Math.PI);
+				ctx.stroke();
 			}
 
 			function draw() {
 				var canvas = document.getElementById("canvas");
 				var ctx = canvas.getContext("2d");
+
+				// Clear Canvas
+				ctx.clearRect(0,0, canvas.width, canvas.height)
+				
+				// Draw Nodes
+				for (i = 0; i < nodes.length; i++) {
+					drawNode(ctx,nodes[i].x,nodes[i].y);
+
+					// Draw Branches
+					for (j = 0; j < nodes[i].branches.length; j++) {
+						for (k = 0; k < nodes.length; k++) {
+							if (nodes[k].id == nodes[i].branches[j]) {
+								// Draw Line
+								ctx.beginPath();
+								ctx.moveTo(nodes[i].x, nodes[i].y);
+								ctx.lineTo(nodes[k].x, nodes[k].y);
+								ctx.stroke();
+							}
+						}
+					}
+				}
 			}
 		</script>
 	</head>
@@ -44,7 +144,7 @@
 			<div style="float: left">
 				<canvas id="canvas" onclick="canvasClick();" style="border-style: solid;""></canvas>
 			</div>
-			<div style="float: left; width: 375px;">
+			<div style="float: left; width: 350px;">
 				<center>
 					Signal Flow Graph Visualizer
 					<p id="action-message">
@@ -52,11 +152,13 @@
 					
 					<div><button onclick="addNode();">
 					Add Node
-					</button>
-					</div>
-					<button onclick="addBranch();">
+					</button></div>
+					<div><button onclick="addBranch();">
 					Add Branch
-					</button>
+					</button></div>
+					<div><button onclick="removeNode();">
+					Remove Node
+					</button></div>
 				</center>
 			</div>
 		<div>
