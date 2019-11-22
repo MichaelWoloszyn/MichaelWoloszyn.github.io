@@ -1,0 +1,64 @@
+<html>
+	<head>
+		<script>
+			var nodes = [];
+			var state = 0;
+
+			var IDLE = 0;
+			var ADDNODE = 1;
+			var ADDBRANCH1 = 2;
+			var ADDBRANCH2 = 3;
+			
+			function addNode() {
+				state = ADDNODE;
+				message = document.getElementById("action-message");
+				message.innerHTML = "Please click somewhere to add a node.";
+			}
+
+			function canvasClick() {
+				var canvas = document.getElementById("canvas");
+				var ctx = canvas.getContext("2d");
+				
+				if (state == ADDNODE) {
+					message = document.getElementById("action-message");
+					message.innerHTML = "";
+				}
+			}
+			
+			function initialize() {
+				var canvas = document.getElementById("canvas");
+				var ctx = canvas.getContext("2d");
+
+				canvas.width = window.innerWidth - 400;
+				canvas.height = window.innerHeight - 100;
+			}
+
+			function draw() {
+				var canvas = document.getElementById("canvas");
+				var ctx = canvas.getContext("2d");
+			}
+		</script>
+	</head>
+	<body onload="initialize();" class>
+		<div>
+			<div style="float: left">
+				<canvas id="canvas" onclick="canvasClick();" style="border-style: solid;""></canvas>
+			</div>
+			<div style="float: left; width: 375px;">
+				<center>
+					Signal Flow Graph Visualizer
+					<p id="action-message">
+					</p>
+					
+					<div><button onclick="addNode();">
+					Add Node
+					</button>
+					</div>
+					<button onclick="addBranch();">
+					Add Branch
+					</button>
+				</center>
+			</div>
+		<div>
+	</body>
+</html>
