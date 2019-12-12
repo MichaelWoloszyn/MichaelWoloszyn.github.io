@@ -51,8 +51,18 @@
 				if (state == ADDNODE) {
 					message = document.getElementById("action-message");
 					message.innerHTML = "";
-
-					nodes.push({id: nodeID,x: x,y: y,branches: []})
+					
+					var variablename = window.prompt("Please enter a variable name.","")
+					while (variablename == null || variablename == "") {
+						if (variablename == "") {
+							variablename = window.prompt("Variable name cannot be blank.\n\nPlease enter a variable name.","");
+						}
+						else {
+							variablename = window.prompt("Please enter a variable name.","");
+						}
+					}
+					
+					nodes.push({id: nodeID,variable: variablename,x: x,y: y,branches: []})
 					nodeID = nodeID + 1;
 
 					state = IDLE;
@@ -130,9 +140,17 @@
 			}
 
 
-			function drawNode(ctx,x,y) {
+			function drawNode(ctx,text,x,y) {
 				ctx.beginPath();
 				ctx.arc(x,y,50,0,2*Math.PI);
+				ctx.font="14px Arial";
+				for (var i = 14;i >= 1;i--) {
+					ctx.font = i.toString().concat("px Arial");
+					if (ctx.measureText(text).width <= 90) {
+						break;
+					}
+				}
+				ctx.fillText(text,x-ctx.measureText(text).width/2,y+7);
 				ctx.stroke();
 			}
 
@@ -145,7 +163,7 @@
 				
 				// Draw Nodes
 				for (i = 0; i < nodes.length; i++) {
-					drawNode(ctx,nodes[i].x + offsetx,nodes[i].y + offsety);
+					drawNode(ctx,nodes[i].variable,nodes[i].x + offsetx,nodes[i].y + offsety);
 
 					// Draw Branches
 					for (j = 0; j < nodes[i].branches.length; j++) {
