@@ -143,6 +143,9 @@
 			function drawNode(ctx,text,x,y) {
 				ctx.beginPath();
 				ctx.arc(x,y,50,0,2*Math.PI);
+				ctx.fillStyle = "white";
+				ctx.fill();
+				ctx.fillStyle = "black";
 				ctx.font="14px Arial";
 				for (var i = 14;i >= 1;i--) {
 					ctx.font = i.toString().concat("px Arial");
@@ -161,10 +164,8 @@
 				// Clear Canvas
 				ctx.clearRect(0,0, canvas.width, canvas.height)
 				
-				// Draw Nodes
+				
 				for (i = 0; i < nodes.length; i++) {
-					drawNode(ctx,nodes[i].variable,nodes[i].x + offsetx,nodes[i].y + offsety);
-
 					// Draw Branches
 					for (j = 0; j < nodes[i].branches.length; j++) {
 						for (k = 0; k < nodes.length; k++) {
@@ -177,6 +178,11 @@
 							}
 						}
 					}
+				}
+				
+				// Draw Nodes
+				for (i = 0; i < nodes.length; i++) {
+					drawNode(ctx,nodes[i].variable,nodes[i].x + offsetx,nodes[i].y + offsety);
 				}
 			}
 		</script>
