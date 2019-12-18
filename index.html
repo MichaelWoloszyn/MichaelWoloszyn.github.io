@@ -3,7 +3,7 @@
 		<script>
 			var nodes = [];
 			var state = 0;
-			var nodeID = 0;
+			var IDCounter = 0;
 
 			var IDLE = 0;
 			var ADDNODE = 1;
@@ -14,6 +14,7 @@
 			var	node1;
 			var node2;
 			
+			// Variables to do with dragging
 			var offsetx = 0;
 			var offsety = 0;
 			var initialx;
@@ -21,6 +22,8 @@
 			var tempx;
 			var tempy;
 			var dragging = false;
+			
+			var temppath = [];
 			
 			function addNode() {
 				state = ADDNODE;
@@ -62,8 +65,8 @@
 						}
 					}
 					
-					nodes.push({id: nodeID,variable: variablename,x: x,y: y,branches: []})
-					nodeID = nodeID + 1;
+					nodes.push({id: IDCounter,type: "node",variable: variablename,x: x,y: y,branches: []})
+					IDCounter = IDCounter + 1;
 
 					state = IDLE;
 				}
@@ -72,24 +75,32 @@
 						if (Math.pow((x-nodes[i].x),2) + Math.pow((y-nodes[i].y),2) <= Math.pow(50,2)) {
 							node1 = nodes[i].id;
 							message = document.getElementById("action-message");
-							message.innerHTML = "Please select the second node.";
+							message.innerHTML = "Please select the second node (or click elsewhere to create an intermediate point).";
 							state = ADDBRANCH2;
 						}
 					}
 				}
 				else if (state == ADDBRANCH2) {
+					var found = false;
 					for (var i = 0; i < nodes.length; i++) {
 						if (Math.pow((x-nodes[i].x),2) + Math.pow((y-nodes[i].y),2) <= Math.pow(50,2)) {
+							found = true;
 							node2 = nodes[i].id;
 							message = document.getElementById("action-message");
 							message.innerHTML = "";
 							for (var j = 0; j < nodes.length; j++) {
 								if (nodes[j].id == node1) {
-									nodes[j].branches.push(node2);
+									nodes[j].branches.push({id: IDCounter,type: "branch",destNode: node2,path: temppath});
+									temppath = [];
+									IDCounter = IDCounter + 1;
 								}
 							}
 							state = IDLE;
+							break;
 						}
+					}
+					if (!found) {
+						temppath.push({x: x,y: y});
 					}
 				}
 				else if (state == REMOVENODE) {
@@ -99,7 +110,7 @@
 							message.innerHTML = "";
 							for (var j = 0; j < nodes.length; j++) {
 								for (var k = 0; k < nodes[j].branches.length; k++) {
-									if (nodes[j].branches[k] == nodes[i].id) {
+									if (nodes[j].branches[k].destNode == nodes[i].id) {
 										nodes[j].branches.splice(k,1);
 										k--;
 									}
@@ -170,10 +181,14 @@
 					// Draw Branches
 					for (var j = 0; j < nodes[i].branches.length; j++) {
 						for (var k = 0; k < nodes.length; k++) {
-							if (nodes[k].id == nodes[i].branches[j]) {
+							if (nodes[k].id == nodes[i].branches[j].destNode) {
 								// Draw Line
 								ctx.beginPath();
 								ctx.moveTo(nodes[i].x + offsetx, nodes[i].y + offsety);
+								// Draw intermediate points
+								for (var l = 0; l < nodes[i].branches[j].path.length; l++) {
+									ctx.lineTo(nodes[i].branches[j].path[l].x + offsetx, nodes[i].branches[j].path[l].y + offsety);
+								}
 								ctx.lineTo(nodes[k].x + offsetx, nodes[k].y + offsety);
 								ctx.stroke();
 							}
