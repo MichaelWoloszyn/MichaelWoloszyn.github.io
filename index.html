@@ -73,7 +73,7 @@
 				else if (state == ADDBRANCH1) {
 					for (var i = 0; i < nodes.length; i++) {
 						if (Math.pow((x-nodes[i].x),2) + Math.pow((y-nodes[i].y),2) <= Math.pow(50,2)) {
-							node1 = nodes[i].id;
+							node1 = nodes[i];
 							message = document.getElementById("action-message");
 							message.innerHTML = "Please select the second node (or click elsewhere to create an intermediate point).";
 							state = ADDBRANCH2;
@@ -85,12 +85,12 @@
 					for (var i = 0; i < nodes.length; i++) {
 						if (Math.pow((x-nodes[i].x),2) + Math.pow((y-nodes[i].y),2) <= Math.pow(50,2)) {
 							found = true;
-							node2 = nodes[i].id;
+							node2 = nodes[i];
 							message = document.getElementById("action-message");
 							message.innerHTML = "";
 							for (var j = 0; j < nodes.length; j++) {
-								if (nodes[j].id == node1) {
-									nodes[j].branches.push({id: IDCounter,type: "branch",destNode: node2,path: temppath});
+								if (nodes[j].id == node1.id) {
+									nodes[j].branches.push({id: IDCounter,type: "branch",destNode: node2.id,path: temppath});
 									temppath = [];
 									IDCounter = IDCounter + 1;
 								}
@@ -194,6 +194,17 @@
 							}
 						}
 					}
+				}
+				
+				// Draw intermediate path if currently making one
+				if (temppath.length != 0) {
+					ctx.beginPath();
+					ctx.moveTo(node1.x + offsetx, node1.y + offsety);
+					
+					for (var i = 0;i < temppath.length;i++) {
+						ctx.lineTo(temppath[i].x + offsetx,temppath[i].y + offsety);
+					}
+					ctx.stroke();
 				}
 				
 				// Draw Nodes
