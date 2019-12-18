@@ -68,7 +68,7 @@
 					state = IDLE;
 				}
 				else if (state == ADDBRANCH1) {
-					for (i = 0; i < nodes.length; i++) {
+					for (var i = 0; i < nodes.length; i++) {
 						if (Math.pow((x-nodes[i].x),2) + Math.pow((y-nodes[i].y),2) <= Math.pow(50,2)) {
 							node1 = nodes[i].id;
 							message = document.getElementById("action-message");
@@ -78,12 +78,12 @@
 					}
 				}
 				else if (state == ADDBRANCH2) {
-					for (i = 0; i < nodes.length; i++) {
+					for (var i = 0; i < nodes.length; i++) {
 						if (Math.pow((x-nodes[i].x),2) + Math.pow((y-nodes[i].y),2) <= Math.pow(50,2)) {
 							node2 = nodes[i].id;
 							message = document.getElementById("action-message");
 							message.innerHTML = "";
-							for (j = 0; j < nodes.length; j++) {
+							for (var j = 0; j < nodes.length; j++) {
 								if (nodes[j].id == node1) {
 									nodes[j].branches.push(node2);
 								}
@@ -93,12 +93,12 @@
 					}
 				}
 				else if (state == REMOVENODE) {
-					for (i = 0; i < nodes.length; i++) {
+					for (var i = 0; i < nodes.length; i++) {
 						if (Math.pow((x-nodes[i].x),2) + Math.pow((y-nodes[i].y),2) <= Math.pow(50,2)) {
 							message = document.getElementById("action-message");
 							message.innerHTML = "";
-							for (j = 0; j < nodes.length; j++) {
-								for (k = 0; k < nodes[j].branches.length; k++) {
+							for (var j = 0; j < nodes.length; j++) {
+								for (var k = 0; k < nodes[j].branches.length; k++) {
 									if (nodes[j].branches[k] == nodes[i].id) {
 										nodes[j].branches.splice(k,1);
 										k--;
@@ -166,10 +166,10 @@
 				ctx.clearRect(0,0, canvas.width, canvas.height)
 				
 				
-				for (i = 0; i < nodes.length; i++) {
+				for (var i = 0; i < nodes.length; i++) {
 					// Draw Branches
-					for (j = 0; j < nodes[i].branches.length; j++) {
-						for (k = 0; k < nodes.length; k++) {
+					for (var j = 0; j < nodes[i].branches.length; j++) {
+						for (var k = 0; k < nodes.length; k++) {
 							if (nodes[k].id == nodes[i].branches[j]) {
 								// Draw Line
 								ctx.beginPath();
@@ -182,7 +182,7 @@
 				}
 				
 				// Draw Nodes
-				for (i = 0; i < nodes.length; i++) {
+				for (var i = 0; i < nodes.length; i++) {
 					drawNode(ctx,nodes[i].variable,nodes[i].x + offsetx,nodes[i].y + offsety);
 				}
 			}
