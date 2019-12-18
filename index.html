@@ -100,7 +100,8 @@
 							for (j = 0; j < nodes.length; j++) {
 								for (k = 0; k < nodes[j].branches.length; k++) {
 									if (nodes[j].branches[k] == nodes[i].id) {
-										delete nodes[j].branches[k]
+										nodes[j].branches.splice(k,1);
+										k--;
 									}
 								}
 							}
@@ -190,7 +191,7 @@
 	<body onload="initialize();" class="" id="body">
 		<div>
 			<div style="float: left">
-				<canvas id="canvas" onclick="canvasClick();" style="border-style: solid;" "="" width="1280" height="836"></canvas>
+				<canvas id="canvas" style="border-style: solid;" "="" width="1280" height="836"></canvas>
 			</div>
 			<div style="float: left; width: 350px;">
 				<center>
@@ -212,4 +213,5 @@
 		<div>
 	
 
-</div></div></body></html>
+</div></div>
+</body></html>
