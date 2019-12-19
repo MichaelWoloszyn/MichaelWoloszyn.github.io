@@ -1,5 +1,6 @@
 <html><head>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+		<script src="FileSaver.js"></script>
 		<script>
 			var nodes = [];
 			var state = 0;
@@ -41,6 +42,39 @@
 				state = REMOVENODE;
 				message = document.getElementById("action-message");
 				message.innerHTML = "Please select the node you wish to delete.";
+			}
+			
+			function saveFile() {
+				var filename = window.prompt("Please enter a file name.","")
+				while (filename == null || filename == "") {
+					if (filename == "") {
+						filename = window.prompt("File name cannot be blank.\n\nPlease enter a file name.","");
+					}
+					else {
+						filename = window.prompt("Please enter a file name.","");
+					}
+				}
+				var json = JSON.stringify(nodes);
+				var blob = new Blob([json],{type: "application/json"});
+				saveAs( blob, filename + ".json" );
+			}
+			
+			function loadFile(e) {
+				var file = e.target.files[0];
+				if (!file) {
+					return;
+				}
+				var reader = new FileReader();
+				reader.onload = function(e) {
+				var contents = e.target.result;
+					loadContents(contents);
+				};
+				reader.readAsText(file);
+			}
+			
+			function loadContents(contents) {
+				nodes = JSON.parse(contents);
+				draw();
 			}
 
 			function canvasClick(event) {
@@ -164,6 +198,7 @@
 					draw();
 				}},false)
 				window.addEventListener("mouseup",function(event) {dragging = false;},false);
+				document.getElementById("getFile").addEventListener("change",loadFile,false);
 			}
 
 
@@ -313,6 +348,12 @@
 					<div><button onclick="removeNode();">
 					Remove Node
 					</button></div>
+					<div><button onclick="saveFile();">
+					Save
+					</button></div>
+					<div><button onclick="document.getElementById('getFile').click()">Load</button>
+					<input type='file' id="getFile" style="display:none" accept=".json"> 
+					</div>
 				</center>
 			</div>
 		<div>
