@@ -142,6 +142,10 @@
 
 				canvas.width = window.innerWidth - 400;
 				canvas.height = window.innerHeight - 100;
+				
+				// Arrowhead image needs to be initialized for some reason
+				drawArrowhead(ctx,0,0,1,1);
+				draw();
 
 				canvas.addEventListener("click",function(event) {canvasClick(event)},false);
 				canvas.addEventListener("mousedown",function(event) {dragging = true;
