@@ -90,7 +90,18 @@
 							message.innerHTML = "";
 							for (var j = 0; j < nodes.length; j++) {
 								if (nodes[j].id == node1.id) {
-									nodes[j].branches.push({id: IDCounter,type: "branch",destNode: node2.id,path: temppath});
+									// Get Name
+									var variablename = window.prompt("Please enter a variable name.","")
+									while (variablename == null || variablename == "") {
+										if (variablename == "") {
+											variablename = window.prompt("Variable name cannot be blank.\n\nPlease enter a variable name.","");
+										}
+										else {
+											variablename = window.prompt("Please enter a variable name.","");
+										}
+									}
+									// Create branch
+									nodes[j].branches.push({id: IDCounter,type: "branch",variable: variablename,destNode: node2.id,path: temppath});
 									temppath = [];
 									IDCounter = IDCounter + 1;
 								}
@@ -155,8 +166,6 @@
 			function drawNode(ctx,text,x,y) {
 				ctx.beginPath();
 				ctx.arc(x,y,50,0,2*Math.PI);
-				ctx.fillStyle = "white";
-				ctx.fill();
 				ctx.fillStyle = "black";
 				ctx.font="14px Arial";
 				for (var i = 14;i >= 1;i--) {
@@ -167,6 +176,20 @@
 				}
 				ctx.fillText(text,x-ctx.measureText(text).width/2,y+7);
 				ctx.stroke();
+			}
+
+			function drawArrowhead(ctx,x,y,prevx,prevy) {
+				var image = document.createElement("img");
+				image.src = "triangle.png";
+				ctx.save();
+				var destx = x - 60*(x-prevx)/Math.pow((Math.pow(x-prevx,2) + Math.pow(y-prevy,2)),0.5);
+				var desty = y - 60*(y-prevy)/Math.pow((Math.pow(x-prevx,2) + Math.pow(y-prevy,2)),0.5);
+				var relx = 60*(x-prevx)/Math.pow((Math.pow(x-prevx,2) + Math.pow(y-prevy,2)),0.5);
+				var rely = 60*(y-prevy)/Math.pow((Math.pow(x-prevx,2) + Math.pow(y-prevy,2)),0.5);
+				ctx.translate(destx+offsetx,desty+offsety);
+				ctx.rotate(Math.atan2(rely,relx)+Math.PI/2);
+				ctx.drawImage(image,-image.width/2,-image.width/2);
+				ctx.restore();
 			}
 
 			function draw() {
@@ -184,13 +207,56 @@
 							if (nodes[k].id == nodes[i].branches[j].destNode) {
 								// Draw Line
 								ctx.beginPath();
-								ctx.moveTo(nodes[i].x + offsetx, nodes[i].y + offsety);
+								ctx.fillStyle = "black";
+								ctx.font="14px Arial";
+								// Draw beginning of branch, offset of the center of the node by its radius
+								// (If there is an intermediate path or not)
+								if (nodes[i].branches[j].path.length > 0) {
+									var x = nodes[i].x + 50*(nodes[i].branches[j].path[0].x - nodes[i].x)/Math.pow(Math.pow((nodes[i].branches[j].path[0].x - nodes[i].x),2) + Math.pow((nodes[i].branches[j].path[0].y - nodes[i].y),2),0.5) + offsetx;
+									var y = nodes[i].y + 50*(nodes[i].branches[j].path[0].y - nodes[i].y)/Math.pow(Math.pow((nodes[i].branches[j].path[0].x - nodes[i].x),2) + Math.pow((nodes[i].branches[j].path[0].y - nodes[i].y),2),0.5) + offsety;
+									ctx.moveTo(x, y);
+								}
+								else {
+									var x = nodes[i].x + 50*(nodes[k].x - nodes[i].x)/Math.pow(Math.pow((nodes[k].x - nodes[i].x),2) + Math.pow((nodes[k].y - nodes[i].y),2),0.5) + offsetx;
+									var y = nodes[i].y + 50*(nodes[k].y - nodes[i].y)/Math.pow(Math.pow((nodes[k].x - nodes[i].x),2) + Math.pow((nodes[k].y - nodes[i].y),2),0.5) + offsety;
+									ctx.moveTo(x, y);
+								}
 								// Draw intermediate points
 								for (var l = 0; l < nodes[i].branches[j].path.length; l++) {
 									ctx.lineTo(nodes[i].branches[j].path[l].x + offsetx, nodes[i].branches[j].path[l].y + offsety);
 								}
-								ctx.lineTo(nodes[k].x + offsetx, nodes[k].y + offsety);
+								// Draw end of branch, offset of the center of the node by its radius
+								// (If there is an intermediate path or not)
+								if (nodes[i].branches[j].path.length > 0) {
+									var x = nodes[k].x - 50*(nodes[k].x - nodes[i].branches[j].path[nodes[i].branches[j].path.length - 1].x)/Math.pow(Math.pow((nodes[i].branches[j].path[nodes[i].branches[j].path.length - 1].x - nodes[k].x),2) + Math.pow((nodes[i].branches[j].path[nodes[i].branches[j].path.length - 1].y - nodes[k].y),2),0.5) + offsetx;
+									var y = nodes[k].y - 50*(nodes[k].y - nodes[i].branches[j].path[nodes[i].branches[j].path.length - 1].y)/Math.pow(Math.pow((nodes[i].branches[j].path[nodes[i].branches[j].path.length - 1].x - nodes[k].x),2) + Math.pow((nodes[i].branches[j].path[nodes[i].branches[j].path.length - 1].y - nodes[k].y),2),0.5) + offsety;
+									ctx.lineTo(x, y);
+								}
+								else {
+									var x = nodes[k].x - 50*(nodes[k].x - nodes[i].x)/Math.pow(Math.pow((nodes[k].x - nodes[i].x),2) + Math.pow((nodes[k].y - nodes[i].y),2),0.5) + offsetx;
+									var y = nodes[k].y - 50*(nodes[k].y - nodes[i].y)/Math.pow(Math.pow((nodes[k].x - nodes[i].x),2) + Math.pow((nodes[k].y - nodes[i].y),2),0.5) + offsety;
+									ctx.lineTo(x, y);
+								}
 								ctx.stroke();
+								
+								// Draw variable name
+								if (nodes[i].branches[j].path.length == 0) {
+									ctx.fillText(nodes[i].branches[j].variable,nodes[i].x + (nodes[k].x - nodes[i].x)/2 + offsetx - ctx.measureText(nodes[i].branches[j].variable).width/2,nodes[i].y + (nodes[k].y - nodes[i].y)/2 - 17 + offsety);
+								}
+								else if (nodes[i].branches[j].path.length % 2 == 1) {
+									ctx.fillText(nodes[i].branches[j].variable,nodes[i].branches[j].path[nodes[i].branches[j].path.length/2 - 0.5].x + offsetx - ctx.measureText(nodes[i].branches[j].variable).width/2,nodes[i].branches[j].path[nodes[i].branches[j].path.length/2 - 0.5].y - 17 + offsety);
+								}
+								else {
+									ctx.fillText(nodes[i].branches[j].variable,nodes[i].branches[j].path[nodes[i].branches[j].path.length/2 - 1].x + (nodes[i].branches[j].path[nodes[i].branches[j].path.length/2].x - nodes[i].branches[j].path[nodes[i].branches[j].path.length/2 - 1].x)/2 + offsetx - ctx.measureText(nodes[i].branches[j].variable).width/2,nodes[i].branches[j].path[nodes[i].branches[j].path.length/2 - 1].y + (nodes[i].branches[j].path[nodes[i].branches[j].path.length/2].y - nodes[i].branches[j].path[nodes[i].branches[j].path.length/2 - 1].y)/2 + offsety - 17)
+								}
+								
+								// Draw arrowhead
+								if (nodes[i].branches[j].path.length == 0) {
+									drawArrowhead(ctx,nodes[k].x,nodes[k].y,nodes[i].x,nodes[i].y);
+								}
+								else {
+									drawArrowhead(ctx,nodes[k].x,nodes[k].y,nodes[i].branches[j].path[nodes[i].branches[j].path.length - 1].x,nodes[i].branches[j].path[nodes[i].branches[j].path.length - 1].y);
+								}
 							}
 						}
 					}
@@ -199,7 +265,10 @@
 				// Draw intermediate path if currently making one
 				if (temppath.length != 0) {
 					ctx.beginPath();
-					ctx.moveTo(node1.x + offsetx, node1.y + offsety);
+					
+					var x = node1.x + 50*(temppath[0].x - node1.x)/Math.pow(Math.pow((temppath[0].x - node1.x),2) + Math.pow((temppath[0].y - node1.y),2),0.5) + offsetx;
+					var y = node1.y + 50*(temppath[0].y - node1.y)/Math.pow(Math.pow((temppath[0].x - node1.x),2) + Math.pow((temppath[0].y - node1.y),2),0.5) + offsety;
+					ctx.moveTo(x, y);
 					
 					for (var i = 0;i < temppath.length;i++) {
 						ctx.lineTo(temppath[i].x + offsetx,temppath[i].y + offsety);
