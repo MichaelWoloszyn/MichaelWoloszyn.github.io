@@ -282,7 +282,7 @@
 								ctx.stroke();
 								
 								// Draw variable name
-								if (nodes[i] == nodes[k]) {
+								if (nodes[i] == nodes[k] && nodes[i].branches[j].path.length == 0) {
 									// Do nothing since origin node is same as dest node.
 								}
 								else if (nodes[i].branches[j].path.length == 0) {
