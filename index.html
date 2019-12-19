@@ -183,6 +183,9 @@
 			}
 
 			function drawArrowhead(ctx,x,y,prevx,prevy) {
+				if (x == prevx && y == prevy) {
+					return;
+				}
 				var image = document.createElement("img");
 				image.src = "triangle.png";
 				ctx.save();
@@ -244,7 +247,10 @@
 								ctx.stroke();
 								
 								// Draw variable name
-								if (nodes[i].branches[j].path.length == 0) {
+								if (nodes[i] == nodes[k]) {
+									// Do nothing since origin node is same as dest node.
+								}
+								else if (nodes[i].branches[j].path.length == 0) {
 									ctx.fillText(nodes[i].branches[j].variable,nodes[i].x + (nodes[k].x - nodes[i].x)/2 + offsetx - ctx.measureText(nodes[i].branches[j].variable).width/2,nodes[i].y + (nodes[k].y - nodes[i].y)/2 - 17 + offsety);
 								}
 								else if (nodes[i].branches[j].path.length % 2 == 1) {
