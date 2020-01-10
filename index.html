@@ -4,13 +4,15 @@
 		<script>
 			var nodes = [];
 			var state = 0;
-			var IDCounter = 0;
+			nodes.IDCounter = 0;
 
 			var IDLE = 0;
 			var ADDNODE = 1;
 			var ADDBRANCH1 = 2;
 			var ADDBRANCH2 = 3;
 			var REMOVENODE = 4;
+			var SOLVETF1 = 5;
+			var SOLVETF2 = 6;
 
 			var	node1;
 			var node2;
@@ -25,6 +27,11 @@
 			var dragging = false;
 			
 			var temppath = [];
+			
+			var paths = {};
+			paths.forward = [];
+			paths.loops = [];
+			paths.loopcombinations = [];
 			
 			function addNode() {
 				state = ADDNODE;
@@ -42,6 +49,119 @@
 				state = REMOVENODE;
 				message = document.getElementById("action-message");
 				message.innerHTML = "Please select the node you wish to delete.";
+			}
+			
+			function solveTF() {
+				state = SOLVETF1;
+				message = document.getElementById("action-message");
+				message.innerHTML = "Please select the first node.";
+			}
+			
+			function nontouchingloops(loopcombinations) {
+				for (var i=0;i<loopcombinations.length;i++) {
+					var visitedids = [];
+					for (var j=0;j<loopcombinations[i].length;j++) {
+						for (var k=0;k<loopcombinations[i][j].length;k++) {
+							// Check to see if branch or node already exists
+							var containssameid = visitedids.includes(loopcombinations[i][j][k].id);
+							if (containssameid) {
+								loopcombinations[i] = null;
+								i++;
+								if (i >= loopcombinations.length) {
+									break;
+								}
+								j=0;
+								k=-1;
+								visitedids = [];
+							}
+							else {
+								visitedids.push(loopcombinations[i][j][k].id);
+							}
+						}
+						if (i >= loopcombinations.length) {
+							break;
+						}
+					}
+				}
+				// Remove all null elements
+				loopcombinations = loopcombinations.filter(function (el) {return el != null;});
+				return loopcombinations;
+			}
+			
+			const powerset = (array) => { // O(2^n)
+				const results = [[]];
+				for (const value of array) {
+					const copy = [...results]; // See note below.
+					for (const prefix of copy) {
+						results.push(prefix.concat([value]));
+					}
+				}
+				results.splice(0,1); // Remove empty set
+				return results;
+			};
+			
+			function iterateTF( _path, curnode, finalnode) {
+				// Create a local copy of the current path
+				var path = JSON.parse(JSON.stringify(_path));
+				path.push(curnode);
+				
+				if (curnode.id == finalnode.id) {
+					paths.forward.push(path);
+					return;
+				}
+				
+				for (var i=0;i < curnode.branches.length;i++) {
+					var newpath = JSON.parse(JSON.stringify(path));
+					newpath.push(curnode.branches[i]);
+					var nextnodeid = curnode.branches[i].destNode;
+					for (var j=0;j < newpath.length;j++) {
+						if (nextnodeid == newpath[j].id) {
+							// Next node already exists in the path, therefore this is a loop.
+							newpath = newpath.slice(j);
+							paths.loops.push(newpath);
+							return;
+						}
+					}
+					var nextnode;
+					for (var j=0;j < nodes.length;j++) {
+						if (nodes[j].id == nextnodeid){
+							nextnode = nodes[j];
+							break;
+						}
+					}
+					iterateTF(newpath, nextnode, finalnode);
+				}
+			}
+			
+			function finddeterminant() {
+				var outputstring = "1";
+				var currentnumloops = 1;
+				while (true) {
+					var amountfound = 0;
+					for (var i=0;i<paths.loopcombinations.length;i++) {
+						if (paths.loopcombinations[i].length == currentnumloops) {
+							amountfound++;
+							if (currentnumloops % 2 == 1) {
+								outputstring = outputstring + "-";
+							}
+							else {
+								outputstring = outputstring + "+";
+							}
+							for (var j=0;j<paths.loopcombinations[i].length;j++) {
+								for (var k=0;k<paths.loopcombinations[i][j].length;k++) {
+									if (paths.loopcombinations[i][j][k].type == "branch") {
+										outputstring = outputstring + paths.loopcombinations[i][j][k].variable;
+									}
+								}
+							}
+						}
+					}
+					currentnumloops++;
+					if (amountfound == 0) {
+						break;
+					}
+				}
+				return outputstring;
 			}
 			
 			function saveFile() {
@@ -99,8 +219,8 @@
 						}
 					}
 					
-					nodes.push({id: IDCounter,type: "node",variable: variablename,x: x,y: y,branches: []})
-					IDCounter = IDCounter + 1;
+					nodes.push({id: nodes.IDCounter,type: "node",variable: variablename,x: x,y: y,branches: []})
+					nodes.IDCounter = nodes.IDCounter + 1;
 
 					state = IDLE;
 				}
@@ -135,9 +255,9 @@
 										}
 									}
 									// Create branch
-									nodes[j].branches.push({id: IDCounter,type: "branch",variable: variablename,destNode: node2.id,path: temppath});
+									nodes[j].branches.push({id: nodes.IDCounter,type: "branch",variable: variablename,destNode: node2.id,path: temppath});
 									temppath = [];
-									IDCounter = IDCounter + 1;
+									nodes.IDCounter = nodes.IDCounter + 1;
 								}
 							}
 							state = IDLE;
@@ -163,6 +283,37 @@
 							}
 							nodes.splice(i,1);
 							state = IDLE;
+						}
+					}
+				}
+				else if (state == SOLVETF1) {
+					for (var i = 0; i < nodes.length; i++) {
+						if (Math.pow((x-nodes[i].x),2) + Math.pow((y-nodes[i].y),2) <= Math.pow(50,2)) {
+							node1 = nodes[i];
+							message = document.getElementById("action-message");
+							message.innerHTML = "Please select the second node.";
+							state = SOLVETF2;
+						}
+					}
+				}
+				else if (state == SOLVETF2) {
+					for (var i = 0; i < nodes.length; i++) {
+						if (Math.pow((x-nodes[i].x),2) + Math.pow((y-nodes[i].y),2) <= Math.pow(50,2)) {
+							node2 = nodes[i];
+							message = document.getElementById("action-message");
+							message.innerHTML = "";
+							state = IDLE;
+							paths.forward = [];
+							paths.loops = [];
+							paths.loopcombinations = [];
+							iterateTF( [], node1, node2);
+							// You still need to clear all loops that don't touch ANY forward path
+							paths.loopcombinations = powerset(paths.loops);
+							// Remove all touching loops
+							paths.loopcombinations = nontouchingloops(paths.loopcombinations);
+							var determinantstring = finddeterminant();
+							alert("Determinant is:\n"+determinantstring);
+							console.log(determinantstring);
 						}
 					}
 				}
@@ -347,6 +498,9 @@
 					</button></div>
 					<div><button onclick="removeNode();">
 					Remove Node
+					</button></div>
+					<div><button onclick="solveTF();">
+					Solve Transfer Fcn
 					</button></div>
 					<div><button onclick="saveFile();">
 					Save
